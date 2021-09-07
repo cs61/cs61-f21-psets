@@ -65,7 +65,7 @@ if test -n "$maindir" -a -z "$fresh"; then
         echo "* Using running container $image12, created $created_at" 1>&2
         echo "- To start a new container, exit then \`cs61-run-docker -f\`" 1>&2
         echo "- To kill this container, exit then \`docker kill $image12\`" 1>&2
-        vexec docker exec -it $image$sshenvarg /bin/bash
+        vexec docker exec -it$sshenvarg $image /bin/bash
     fi
 fi
 

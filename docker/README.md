@@ -1,9 +1,9 @@
 CS 61 Docker
 ============
 
-The [Docker][] container-based virtualization service lets you run a minimal
-CS 61 environment, including a virtual Linux host, on a Mac OS X or Windows
-host, without the overhead of a full virtual machine solution like [VMware
+The [Docker][] container-based virtualization service lets you run a
+minimal CS 61 environment, including Linux, on a Mac OS X or Windows
+computer, without the overhead of a full virtual machine like [VMware
 Workstation][], [VMware Fusion][], or [VirtualBox][].
 
 It should be possible to do *all* CS 61 problem sets on CS 61 Docker.
@@ -17,7 +17,7 @@ Advantages of Docker:
 
 Disadvantages of Docker:
 
-* Docker does not offer a graphical environment. You will need to run all CS61
+* Docker does not offer a graphical environment. You will need to run all CS 61
   programs exclusively in the terminal.
 * Docker technology is less user-friendly than virtual machines. You’ll have
   to type weird commands.
@@ -28,7 +28,7 @@ Disadvantages of Docker:
 
 1.  Download and install [Docker][].
 
-2.  Clone the [cs61-lectures repository][] onto your computer.
+2.  Clone the [cs61-lectures repository][cs61-lectures] onto your computer.
 
 3.  Change into the `cs61-lectures/docker` directory.
 
@@ -45,9 +45,9 @@ Disadvantages of Docker:
     take just a second or so for Docker to restart it.
 
 We may need to change the Docker image during the term. If we do, you’ll
-update your `cs61-lectures` repository to get the latest Dockerfile, then
-re-run the `docker build` command from Step 4. However, later runs should be
-faster since they’ll take advantage of your previous work.
+update your repository to get the latest Dockerfile, then re-run the `docker
+build` command from Step 4. However, later runs should be faster since they’ll
+take advantage of your previous work.
 
 
 ## Running CS 61 Docker by script
@@ -59,8 +59,10 @@ term.
 
 For example, here’s an example of running CS 61 Docker on a Mac OS X host. At
 first, `uname` (a program that prints the name of the currently running
-operating system) reports `Darwin`. Then, `./cs61-run-docker` connects the
-terminal to a Linux virtual machine, a `uname` reports `Linux`.
+operating system) reports `Darwin`. But after `./cs61-run-docker` connects the
+terminal to a Linux virtual machine, `uname` reports `Linux`. At the end of
+the example, `exit` quits the Docker environment and returns the terminal to
+Mac OS X.
 
 ```shellsession
 $ cd ~/cs61-lectures
@@ -130,4 +132,4 @@ $
 [VMware Workstation]: https://www.vmware.com/products/workstation-player.html
 [VMware Fusion]: https://www.vmware.com/products/fusion.html
 [VirtualBox]: https://www.virtualbox.org/
-[cs61-lectures repository]: https://github.com/cs61/cs61-lectures/
+[cs61-lectures]: https://github.com/cs61/cs61-lectures/

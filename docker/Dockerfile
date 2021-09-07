@@ -70,6 +70,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get -y install \
         net-tools \
         netcat \
         telnet \
+        time \
         traceroute
 
 # set up default locale
@@ -84,7 +85,7 @@ RUN useradd -m -s /bin/bash cs61-user && \
     echo "cs61-user ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/cs61-init
 
 # create binary reporting version of dockerfile
-RUN (echo '#\!/bin/sh'; echo 'echo 7') > /usr/bin/cs61-docker-version; chmod ugo+rx,u+w,go-w /usr/bin/cs61-docker-version
+RUN (echo '#\!/bin/sh'; echo 'echo 8') > /usr/bin/cs61-docker-version; chmod ugo+rx,u+w,go-w /usr/bin/cs61-docker-version
 
 # git build arguments
 ARG USER=CS61\ User
