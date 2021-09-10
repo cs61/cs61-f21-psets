@@ -403,8 +403,8 @@ sub test_class ($;@) {
         if ($test eq $x
             || ($x =~ m{(?:\A|[,\s])(\d+)-(\d+)(?:[,\s]|\z)} && $test >= $1 && $test <= $2)
             || $x =~ m{(?:\A|[,\s])$test(?:[,\s]|\z)}
-            || ($x =~ m{(?:\A|[,\s])san(?:[,\s]|\z)}i && $test != 33 && $test != 40)
-            || ($x =~ m{(?:\A|[,\s])leak(?:[,\s]|\z)}i && $test != 33 && $test != 36 && $test != 40)) {
+            || ($x =~ m{(?:\A|[,\s])san(?:[,\s]|\z)}i && $test != 38 && $test != 45)
+            || ($x =~ m{(?:\A|[,\s])leak(?:[,\s]|\z)}i && $test != 38 && $test != 41 && $test != 45)) {
             return 1;
         }
     }
@@ -443,29 +443,35 @@ if ($Exec) {
                      read_expected($Exec . ".cc"),
                      $ofile, $Exec . ".cc", $Exec, $out));
 } else {
-    my($maxtest, $ntest, $ntestfailed) = (40, 0, 0);
+    my(@tests) = (1..45);
+    foreach my $fn (sort(glob("test[0-9][0-9][0-9].cc"))) {
+        my($n) = +substr($fn, 4, 3);
+        push @tests, $n if !grep { $_ == $n } @tests;
+    }
+    my($ntest, $ntestfailed) = (0, 0);
+
     if ($Test) {
-        for ($i = 1; $i <= $maxtest; $i += 1) {
-            printf "test%03d\n", $i if test_runnable($i)
+        foreach my $i (@tests) {
+            printf "test%03d\n", $i if test_runnable($i);
         }
         exit;
     }
     if ($Make) {
         my(@makeargs) = ("make", @Makeargs);
-        for ($i = 1; $i <= $maxtest; $i += 1) {
+        foreach my $i (@tests) {
             push @makeargs, sprintf("test%03d", $i) if test_runnable($i);
         }
         system(@makeargs);
         exit 1 if $? != 0;
     }
     $ENV{"MALLOC_CHECK_"} = 0;
-    for ($i = 1; $i <= $maxtest; $i += 1) {
+    foreach my $i (@tests) {
         next if !test_runnable($i);
         ++$ntest;
         $ENV{"ASAN_OPTIONS"} = asan_options($i);
         printf STDERR "test%03d ", $i;
         $out = run_sh61(sprintf("./test%03d", $i), "stdout" => "pipe", "stdin" => "/dev/null",
-                        "time_limit" => $i == 34 ? 10 : 5, "size_limit" => 8000);
+                        "time_limit" => $i == 14 || $i == 15 ? 10 : 5, "size_limit" => 8000);
         if (exists($out->{killed})) {
             print STDERR "${Red}CRASH: $out->{killed}$Off\n";
             if (exists($out->{output}) && $out->{output} =~ m/\A\s*(.+)/) {
@@ -479,7 +485,7 @@ if ($Exec) {
         }
     }
     my($ntestpassed) = $ntest - $ntestfailed;
-    if ($ntest == $maxtest && $ntestpassed == $ntest) {
+    if ($ntest == @tests && $ntestpassed == $ntest) {
         print STDERR "${Green}All tests passed!$Off\n";
     } else {
         my($color) = ($ntestpassed == 0 ? $Red : ($ntestpassed == $ntest ? $Green : $Cyan));
