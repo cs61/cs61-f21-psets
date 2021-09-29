@@ -19,4 +19,6 @@ document run-bomb
   Restart the bomb with sol.txt as input.
 end
 
-alias -a rb = run-bomb
+define rb
+  run-bomb
+end
