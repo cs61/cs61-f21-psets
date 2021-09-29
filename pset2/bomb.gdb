@@ -8,7 +8,7 @@ define run-bomb
     detach
   end
   shell killall qemu-x86_64 >/dev/null 2>&1
-  shell qemu-x86_64 -g 12948 bomb sol.txt &
+  shell qemu-x86_64 -g 12948 bomb sol.txt & sleep 0.2
   target remote localhost:12948
   if $run_bomb_continue != 0
     c
@@ -24,7 +24,7 @@ define rb
     detach
   end
   shell killall qemu-x86_64 >/dev/null 2>&1
-  shell qemu-x86_64 -g 12948 bomb sol.txt &
+  shell qemu-x86_64 -g 12948 bomb sol.txt & sleep 0.2
   target remote localhost:12948
   if $run_bomb_continue != 0
     c
