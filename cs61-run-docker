@@ -5,6 +5,8 @@ destdir=cs61-psets
 
 fresh=
 verbose=false
+platform=linux/amd64
+tag=cs61:latest
 while test "$#" -ne 0; do
     if test "$1" = "-f" -o "$1" = "--fresh"; then
         fresh=1
@@ -12,8 +14,21 @@ while test "$#" -ne 0; do
     elif test "$1" = "-V" -o "$1" = "--verbose"; then
         verbose=true
         shift
+    elif test "$1" = "-a" -o "$1" = "--arm" -o "$1" = "--arm64"; then
+        if test "`arch`" = "arm64"; then
+            platform=linux/arm64
+            tag=cs61:arm64
+            shift
+        else
+            echo "\`cs61-run-docker --arm\` only works on ARM64 hosts" 1>&2
+            exit 1
+        fi
     else
-        echo "Usage: cs61-run-docker [-f|--fresh] [-V|--verbose]" 1>&2
+        armtext=
+        if test "`arch`" = "arm64"; then
+            armtext=" [-a|--arm]"
+        fi
+        echo "Usage: cs61-run-docker [-f|--fresh]$armtext [-V|--verbose]" 1>&2
         exit 1
     fi
 done
@@ -57,7 +72,7 @@ if test -n "$SSH_AUTH_SOCK" -a "`uname`" = Darwin; then
 fi
 
 if test -n "$maindir" -a -z "$fresh"; then
-    existing_image="`docker ps -f status=running -f ancestor=cs61:latest -f volume=/host_mnt"$maindir" --no-trunc --format "{{.CreatedAt}},{{.ID}}" | sort -r | head -n 1`"
+    existing_image="`docker ps -f status=running -f ancestor=$tag -f volume=/host_mnt"$maindir" --no-trunc --format "{{.CreatedAt}},{{.ID}}" | sort -r | head -n 1`"
     if test -n "$existing_image"; then
         created_at="`echo $existing_image | sed 's/,.*//'`"
         image="`echo $existing_image | sed 's/^.*,//'`"
@@ -87,7 +102,7 @@ elif test -x /bin/netstat; then
 fi
 
 if test -n "$maindir"; then
-    vexec docker run -it --platform linux/amd64 --rm --cap-add=SYS_PTRACE --cap-add=NET_ADMIN --security-opt seccomp=unconfined -v "$maindir":/home/cs61-user/$destdir$ssharg -w "/home/cs61-user/$destdir$subdir" $netarg$sshenvarg cs61:latest
+    vexec docker run -it --platform $platform --rm --privileged --cap-add=SYS_PTRACE --cap-add=NET_ADMIN --security-opt seccomp=unconfined -v "$maindir":/home/cs61-user/$destdir$ssharg -w "/home/cs61-user/$destdir$subdir" $netarg$sshenvarg $tag
 else
-    vexec docker run -it --platform linux/amd64 --rm --cap-add=SYS_PTRACE --cap-add=NET_ADMIN --security-opt seccomp=unconfined $netarg$sshenvarg cs61:latest
+    vexec docker run -it --platform $platform --rm --privileged --cap-add=SYS_PTRACE --cap-add=NET_ADMIN --security-opt seccomp=unconfined $netarg$sshenvarg $tag
 fi

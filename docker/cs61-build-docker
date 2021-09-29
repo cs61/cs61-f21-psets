@@ -1,2 +1,29 @@
 #! /bin/bash
-docker build -t cs61:latest -f Dockerfile --platform linux/amd64 .
+
+cd `dirname $0`
+
+platform=linux/amd64
+while test "$#" -ne 0; do
+    if test "$1" = "-a" -o "$1" = "--arm" -o "$1" = "--arm64"; then
+        if test "`arch`" = "arm64"; then
+            platform=linux/arm64
+            shift
+        else
+            echo "\`cs61-build-docker --arm\` only works on ARM64 hosts" 1>&2
+            exit 1
+        fi
+    else
+        armtext=
+        if test "`arch`" = "arm64"; then
+            armtext=" [-a|--arm]"
+        fi
+        echo "Usage: cs61-build-docker$armtext" 1>&2
+        exit 1
+    fi
+done
+
+if test $platform = linux/amd64; then
+    exec docker build -t cs61:latest -f Dockerfile --platform linux/amd64 .
+else
+    exec docker build -t cs61:arm64 -f Dockerfile.arm64 --platform linux/arm64 .
+fi
