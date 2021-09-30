@@ -25,7 +25,7 @@ while test "$#" -ne 0; do
         fi
     else
         armtext=
-        if test "`arch`" = "arm64"; then
+        if test "`arch`" = "arm64" -o "`arch`" = "aarch64"; then
             armtext=" [-a|--arm]"
         fi
         echo "Usage: cs61-run-docker [-f|--fresh]$armtext [-V|--verbose]" 1>&2
