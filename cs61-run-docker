@@ -15,7 +15,7 @@ while test "$#" -ne 0; do
         verbose=true
         shift
     elif test "$1" = "-a" -o "$1" = "--arm" -o "$1" = "--arm64"; then
-        if test "`arch`" = "arm64"; then
+        if test "`arch`" = "arm64" -o "`arch`" = "aarch64"; then
             platform=linux/arm64
             tag=cs61:arm64
             shift
