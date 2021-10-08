@@ -90,6 +90,12 @@ RUN apt-get -y install\
  gdb-multiarch\
  libc6:amd64\
  libstdc++6:amd64\
+ libasan5:amd64\
+ libtsan0:amd64\
+ libubsan1:amd64\
+ libreadline-dev:amd64\
+ libblas-dev:amd64\
+ liblapack-dev:amd64\
  qemu-user
 
 # link x86-64 versions of common tools into /usr/x86_64-linux-gnu/bin
@@ -114,7 +120,7 @@ RUN useradd -m -s /bin/bash cs61-user && \
   echo "cs61-user ALL=(ALL:ALL) NOPASSWD: ALL" > /etc/sudoers.d/cs61-init
 
 # create binary reporting version of dockerfile
-RUN (echo '#\!/bin/sh'; echo 'if test "x$1" = x-n; then echo 11; else echo 11.arm64; fi') > /usr/bin/cs61-docker-version; chmod ugo+rx,u+w,go-w /usr/bin/cs61-docker-version
+RUN (echo '#\!/bin/sh'; echo 'if test "x$1" = x-n; then echo 12; else echo 12.arm64; fi') > /usr/bin/cs61-docker-version; chmod ugo+rx,u+w,go-w /usr/bin/cs61-docker-version
 
 # git build arguments
 ARG USER=CS61\ User
