@@ -7,10 +7,10 @@ CCPREFIX ?=
 
 ifeq ($(CCPREFIX),)
 ifeq ($(origin CC),default)
-CC      := $(shell build/findgcc.sh $(CC))
+CC      := $(shell $(SHELL) build/findgcc.sh $(CC))
 endif
 ifeq ($(origin CXX),default)
-CXX     := $(shell build/findgcc.sh $(CXX))
+CXX     := $(shell $(SHELL) build/findgcc.sh $(CXX))
 endif
 else
 CC      = $(CCPREFIX)cc
