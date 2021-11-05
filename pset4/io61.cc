@@ -7,12 +7,22 @@
 // io61.c
 //    YOUR CODE HERE!
 
+void io61_fill(io61_file* f);
 
 // io61_file
 //    Data structure for io61 file wrappers. Add your own stuff.
 
 struct io61_file {
     int fd;
+    static constexpr off_t bufsize = 16384; // block size for this cache
+    unsigned char cbuf[bufsize];
+    // These “tags” are addresses—file offsets—that describe the cache’s contents.
+    off_t tag;      // file offset of first byte in cache (0 when file is opened)
+    off_t end_tag;  // file offset one past last valid byte in cache
+    off_t pos_tag;  // file offset of next char to read in cache
+    bool readonly;
+    bool writeonly;
+    int md;
 };
 
 
@@ -22,10 +32,11 @@ struct io61_file {
 //    write-only file. You need not support read/write files.
 
 io61_file* io61_fdopen(int fd, int mode) {
-    assert(fd >= 0);
+    //assert(fd >= 0);
     io61_file* f = new io61_file;
     f->fd = fd;
-    (void) mode;
+    //(void) mode;
+    f->md = mode;
     return f;
 }
 
@@ -47,11 +58,33 @@ int io61_close(io61_file* f) {
 
 int io61_readc(io61_file* f) {
     unsigned char buf[1];
-    if (read(f->fd, buf, 1) == 1) {
+    if (io61_read(f, buf, 1) == 1) {
         return buf[0];
     } else {
         return EOF;
     }
+}
+
+void io61_fill(io61_file* f) {
+    // Fill the read cache with new data, starting from file offset `end_tag`.
+    // Only called for read caches.
+
+    // Check invariants.
+    //assert(f->tag <= f->pos_tag && f->pos_tag <= f->end_tag);
+    //assert(f->end_tag - f->pos_tag <= f->bufsize);
+
+    /* ANSWER */
+    // Reset the cache to empty.
+    f->tag = f->pos_tag = f->end_tag;
+    // Read data.
+    ssize_t n = read(f->fd, f->cbuf, f->bufsize);
+    if (n >= 0) {
+        f->end_tag = f->tag + n;
+    }
+
+    // Recheck invariants (good practice!).
+    //assert(f->tag <= f->pos_tag && f->pos_tag <= f->end_tag);
+    //assert(f->end_tag - f->pos_tag <= f->bufsize);
 }
 
 
@@ -63,16 +96,25 @@ int io61_readc(io61_file* f) {
 //    were read.
 
 ssize_t io61_read(io61_file* f, unsigned char* buf, size_t sz) {
-    size_t nread = 0;
-    while (nread != sz) {
-        int ch = io61_readc(f);
-        if (ch == EOF) {
-            break;
+    // REFERENCED FROM SECTION 8
+    // Check invariants.
+    //assert(f->tag <= f->pos_tag && f->pos_tag <= f->end_tag);
+    //assert(f->end_tag - f->pos_tag <= f->bufsize);
+
+    /* ANSWER */
+    size_t pos = 0;
+    while (pos < sz) {
+        if (f->pos_tag == f->end_tag) {
+            io61_fill(f);
+            if (f->pos_tag == f->end_tag) {
+                break;
+            }
         }
-        buf[nread] = ch;
-        ++nread;
+        memcpy(&buf[pos], &f->cbuf[f->pos_tag - f->tag], 1);
+        f->pos_tag += 1;
+        ++pos;
     }
-    return nread;
+    return pos;
 
     // Note: This function never returns -1 because `io61_readc`
     // does not distinguish between error and end-of-file.
@@ -88,7 +130,7 @@ ssize_t io61_read(io61_file* f, unsigned char* buf, size_t sz) {
 int io61_writec(io61_file* f, int ch) {
     unsigned char buf[1];
     buf[0] = ch;
-    if (write(f->fd, buf, 1) == 1) {
+    if (io61_write(f, buf, 1) == 1) {
         return 0;
     } else {
         return -1;
@@ -102,18 +144,30 @@ int io61_writec(io61_file* f, int ch) {
 //    an error occurred before any characters were written.
 
 ssize_t io61_write(io61_file* f, const unsigned char* buf, size_t sz) {
-    size_t nwritten = 0;
-    while (nwritten != sz) {
-        if (io61_writec(f, buf[nwritten]) == -1) {
-            break;
+    //assertions
+    //REFERENCED FROM SECTION 8
+    // Check invariants.
+    //assert(f->tag <= f->pos_tag && f->pos_tag <= f->end_tag);
+    //assert(f->end_tag - f->pos_tag <= f->bufsize);
+
+    // Write cache invariant.
+    //assert(f->pos_tag == f->end_tag);
+
+    
+    size_t pos = 0;
+    while (pos < sz) {
+        if (f->end_tag == f->tag + f->bufsize) {
+            io61_flush(f);
         }
-        ++nwritten;
+
+        memcpy(&f->cbuf[f->pos_tag - f->tag], &buf[pos], 1);
+        // This would be faster if you used `memcpy`!
+        //f->cbuf[f->pos_tag - f->tag] = buf[pos];
+        ++f->pos_tag;
+        ++f->end_tag;
+        ++pos;
     }
-    if (nwritten != 0 || sz == 0) {
-        return nwritten;
-    } else {
-        return -1;
-    }
+    return pos; 
 }
 
 
@@ -123,8 +177,24 @@ ssize_t io61_write(io61_file* f, const unsigned char* buf, size_t sz) {
 //    data buffered for reading, or do nothing.
 
 int io61_flush(io61_file* f) {
-    (void) f;
-    return 0;
+   // Check invariants.
+    //assert(f->tag <= f->pos_tag && f->pos_tag <= f->end_tag);
+    //assert(f->end_tag - f->pos_tag <= f->bufsize);
+
+    // Write cache invariant.
+    //assert(f->pos_tag == f->end_tag);
+    if (f->md == O_RDONLY) {
+        return 0;
+    }
+    //ANSWER 
+    ssize_t n = write(f->fd, f->cbuf, f->pos_tag - f->tag);
+    //NEED ERROR CHECKING
+    //assert((size_t) n == f->pos_tag - f->tag);
+    f->tag = f->pos_tag = f->end_tag;
+    return n; 
+   
+   // (void) f;
+   // return 0;
 }
 
 
@@ -133,13 +203,37 @@ int io61_flush(io61_file* f) {
 //    Returns 0 on success and -1 on failure.
 
 int io61_seek(io61_file* f, off_t pos) {
-    off_t r = lseek(f->fd, (off_t) pos, SEEK_SET);
-    if (r == (off_t) pos) {
+    if (f->md == O_RDONLY) {
+        // read in bounds
+        if(pos >= f->tag && pos < f->end_tag){
+            f->pos_tag = pos;
+            return 0;
+        }
+            off_t r = lseek(f->fd, (off_t) (pos - (pos % f->bufsize)), SEEK_SET);
+
+            if (r != (off_t) (pos - (pos % f->bufsize)) || r < 0) return -1;
+
+            f->pos_tag = f->tag = f->end_tag = pos - (pos % f->bufsize);
+            io61_fill(f);
+            f->pos_tag = pos;
+            return 0;
+             
+            // after fill, set f->tag = the beginning of the 4096 byte aligned block
+        }
+    
+    if (f->md == O_WRONLY) {
+        io61_flush(f);
+        off_t r = lseek(f->fd, (off_t) pos, SEEK_SET);
+        if (r != (off_t) pos || r < 0) {
+            return -1;
+        }
+
         return 0;
-    } else {
-        return -1;
     }
+    
+    return -1;
 }
+
 
 
 // You shouldn't need to change these functions.
@@ -165,6 +259,7 @@ io61_file* io61_open_check(const char* filename, int mode) {
     }
     return io61_fdopen(fd, mode & O_ACCMODE);
 }
+
 
 
 // io61_filesize(f)
