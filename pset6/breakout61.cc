@@ -353,10 +353,16 @@ void print_handler(int) {
     };
     char buf[8192];
     simple_printer sp(buf, sizeof(buf));
+    static bool cleared = false;
     if (main_board) {
         if (is_tty) {
             // clear screen
-            sp << "\x1B[H\x1B[J" << spflush(STDOUT_FILENO);
+            sp << "\x1B[H";
+            if (!cleared) {
+                sp << "\x1B[J";
+                cleared = true;
+            }
+            sp << spflush(STDOUT_FILENO);
         }
 
         summary_handler(0);
