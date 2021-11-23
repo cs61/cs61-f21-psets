@@ -82,8 +82,8 @@ struct pong_ball {
 
     // pong_ball(board)
     //    Construct a new ball on `board`.
-    pong_ball(pong_board& board)
-        : board(board) {
+    pong_ball(pong_board& board_)
+        : board(board_) {
     }
 
     // balls can't be copied, moved, or assigned
@@ -105,8 +105,8 @@ struct pong_warp {
     pong_ball* ball = nullptr;
 
 
-    pong_warp(pong_board& board)
-        : board(board) {
+    pong_warp(pong_board& board_)
+        : board(board_) {
     }
 
     // transfer a ball into this warp tunnel
