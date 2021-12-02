@@ -271,9 +271,9 @@ if ($info->{"utime"} > $info->{"time"} * 0.8) {
     print OUT "${Green}PASS${Off} $tt\n";
 }
 
-# Polling check with holes
-print OUT "\n${Cyan}Polling check with holes...${Off}\n";
-$info = run_sh61("./breakout61 -B0 -d0.01 -w26 -h16 -b10 -s10 -H10", "stdin" => "/dev/null", "stdout" => "pipe", "time_limit" => 1, "size_limit" => 10000);
+# Polling check with warps
+print OUT "\n${Cyan}Polling check with warps...${Off}\n";
+$info = run_sh61("./breakout61 -B0 -d0.01 -w26 -h16 -b10 -s10 -W10", "stdin" => "/dev/null", "stdout" => "pipe", "time_limit" => 1, "size_limit" => 10000);
 if (!exists($info->{"killed"}) || $info->{"killed"} !~ /^timeout/) {
     print OUT "${Red}FAILURE${Redctx} (expected timeout, got ",
         (exists($info->{"killed"}) ? $info->{"killed"} : "exit status " . $info->{"status"}),
@@ -306,7 +306,7 @@ if ($info->{"output"} =~ /\S/) {
     print OUT "${Green}PASS${Off}\n";
 }
 
-# Sanitizer run with holes
+# Sanitizer run with warps
 print OUT "\n${Cyan}Sanitizer check with warps (should see no sanitizer messages)...${Off}\n";
 $info = run_sh61("./breakout61 -W10", "stdin" => "/dev/null", "stdout" => "pipe", "time_limit" => 3, "size_limit" => 10000);
 if (!exists($info->{"killed"}) || $info->{"killed"} !~ /^timeout/) {
